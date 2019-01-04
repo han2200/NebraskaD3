@@ -1,0 +1,311 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nebraska</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<script src="https://d3js.org/d3-collection.v1.min.js"></script>
+<script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+<script src="https://d3js.org/d3-request.v1.min.js"></script>
+<script src="https://d3js.org/d3-queue.v3.min.js"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    
+    <script type="text/javascript"  src="base1.js"></script>
+    
+    <link href="http://fonts.googleapis.com/css?family=Montserrat" charset="utf-8" rel="stylesheet" type="text/css">
+<style>
+    body {
+        font-family: "Proxima Nova", Montserrat, sans-serif;
+        background: white;
+    }
+
+    .map {
+        text-align: center;
+         font-family: "Proxima Nova", Montserrat, sans-serif;
+         background: white;
+    }
+    h1 {
+        
+        font-family: "Proxima Nova", Montserrat, sans-serif;
+        font-size: 2em;
+        font-weight: 30%;
+        color: #005DAA; 
+    }
+
+    h2 {
+       font-family: "Proxima Nova", Montserrat, sans-serif;
+        font-size: 1.6em;
+        
+        
+    }
+     h3 {
+       font-family: "Proxima Nova", Montserrat, sans-serif;
+        font-size: 1em;
+         
+        
+    }
+    .tract {
+      stroke: #fff;
+       
+    } 
+
+.tract:hover {
+      stroke: black;
+        stroke-width: 0.4em;
+       
+    } 
+
+.tractpoverty:hover {
+      stroke: black;
+         stroke-width: 0.4em;
+       
+    } 
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 1%;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2%;
+}
+
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Nebraska</h1>
+      <div class="map"></div>
+</div>
+
+  <script>
+
+   
+ 
+  
+ 
+
+
+
+
+
+
+//map view starts here
+    var width = $( ".map").width();
+      var  height = 600;
+    
+//create svg tag in html
+    var svg = 
+        d3.select( ".map" )
+          .append( "svg" )
+          .attr( "width", width )
+          .attr( "height", height );
+
+$("svg").css({top: 0, left: 300, position:'absolute'});
+
+    var projection = d3.geo.albers()
+        .center([0, 42])
+        .rotate([99,0])
+        .scale(8000)
+        .translate([width / 2, height / 2]);
+
+//Creates a new geographic path generator.
+//converts (longitude and latitude) to  (x and y in pixels)
+    var geoPath = d3.geo.path()
+        .projection(projection);
+        
+ // Set tooltips
+const tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(d => `<strong></strong><span style='color:red;'>${d.properties.placen}<br></span>
+                <strong>Population below poverty level: </strong><span style='color:red;'>${d.properties.poverty}%<br></span>
+                <strong>Population with a disability: </strong><span style='color:red;'>${d.properties.dis}%<br></span>
+                <strong>Population without health insurance: </strong><span style='color:red;'>${d.properties.uninsur}%</span>
+                `);
+ 
+ svg.call(tip);
+
+
+
+
+//create quantile classes with color scale
+        var color = d3.scale.quantile() //designate quantile scale generator
+        .domain([0,10.3,16,30])
+         .range(["#fee6ce","#fdae6b","#e6550d"]);
+//create quantile classes with color scale
+        var color_poverty = d3.scale.quantile() //designate quantile scale generator
+        .domain([0,7.7,13,60])
+         .range(["#deebf7","#9ecae1","#3182bd"]);
+
+
+ 
+ //disability
+      svg.append("g")//g is a html tag, means group,makes SVG visualization more organized
+        .selectAll("path")//path is features (polygons), also a html tag
+        .data(counties.features)//data source
+        .enter()//creating one polygon for every data element in the array.
+        .append("path")//append all polygon to the svg tag in html
+        .attr( "d", geoPath )//The shape of a path element is defined by one attribute: d.
+        .attr("class","tract")//give path tag a class name to style
+        .on("mouseover", function(d){
+            tip.show(d); 
+             
+        })
+        .on("mouseout", function(d){
+            tip.hide(d);
+             
+        })
+        .style("fill", function(d) {
+              return color(d.properties.dis); 
+                
+                })
+        
+
+         
+        ;
+       
+
+
+//poverty
+
+       svg.append("g")//g is a html tag, means group,makes SVG visualization more organized
+        .selectAll("path")//path is features (polygons), also a html tag
+        .data(counties.features)//data source
+        .enter()//creating one polygon for every data element in the array.
+        .append("path")//append all polygon to the svg tag in html
+        .attr( "d", geoPath )//The shape of a path element is defined by one attribute: d.
+        .attr("class","tractpoverty")//give path tag a class name to style
+        .on("mouseover", function(d){
+            tip.show(d);
+             
+             
+        })
+        .on("mouseout", function(d){
+            tip.hide(d);
+             
+        })
+       
+         
+
+        .style("fill",function(d) {
+              return color_poverty(d.properties.dis); 
+
+                })
+         .style("opacity", 0.5)
+          ;
+
+//Adding legend for dis
+
+
+var legend_labels = [" ","", "High disability & poverty%"] ;
+
+
+  var legend = svg.selectAll("g.legend")
+  .data([0,10.3,16])
+  .enter().append("g")
+  .attr("class", "legend");
+
+  var ls_w = 20, ls_h = 20;
+
+  legend.append("rect")
+  .attr("x", 0)
+  .attr("y", function(d, i){ return height - (i*ls_h) - 2*ls_h;})
+  .attr("width", ls_w*3)
+  .attr("height", ls_h)
+  .style("fill", function(d, i) { return color(d); })
+  
+
+  
+  ;
+
+  legend.append("text")
+  .attr("x", 60)
+  .attr("y", function(d, i){ return height - (i*ls_h) - ls_h - 4;})
+  .text(function(d, i){ return legend_labels[i]; })
+   
+;
+
+
+
+//Adding legend for poverty
+
+
+var legend_labels_poverty = ["<7.7%","7.7%-13%", "13-60%"]  ;
+
+
+  var legend = svg.selectAll("g.legend1")
+  .data([0,7.7,13])
+  .enter().append("g")
+  .attr("class", "legendpoverty");
+ 
+
+  legend.append("rect")
+  .attr("x", 0)
+  .attr("y", function(d, i){ return height - (i*ls_h) - 2*ls_h;})
+  .attr("width", ls_w)
+  .attr("height", ls_h)
+  .style("fill", "#deebf7")
+  .style("opacity", 0.5)
+  ;
+ 
+
+ 
+
+
+  var legend = svg.selectAll("g.legend2")
+  .data([0,7.7,13])
+  .enter().append("g")
+  .attr("class", "legend");
+
+   
+
+  legend.append("rect")
+  .attr("x", 20)
+  .attr("y", function(d, i){ return height - (i*ls_h) - 2*ls_h;})
+  .attr("width", ls_w)
+  .attr("height", ls_h)
+  .style("fill", "#9ecae1")
+  .style("opacity", 0.5);
+
+   var legend = svg.selectAll("g.legend3")
+  .data([0,7.7,13])
+  .enter().append("g")
+  .attr("class", "legend");
+
+   
+
+  legend.append("rect")
+  .attr("x", 40)
+  .attr("y", function(d, i){ return height - (i*ls_h) - 2*ls_h;})
+  .attr("width", ls_w)
+  .attr("height", ls_h)
+  .style("fill", "#3182bd")
+  .style("opacity", 0.5);
+
+
+ 
+
+
+
+
+
+    
+</script>
+</body>
+</html>
